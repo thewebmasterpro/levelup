@@ -5,6 +5,7 @@ BizClub est une application qui offre aux entrepreneurs un espace pour **échang
 ## Documentation
 
 - 📋 [Plan d'action complet](docs/PLAN_ACTION.md) — vision, liste des fonctionnalités, stack technique et roadmap détaillée.
+- 💎 [Catalogue des 50 features différenciantes](docs/KILLER_FEATURES.md) — dont les 7 killer features prioritaires intégrées à la roadmap.
 
 ## Stack
 

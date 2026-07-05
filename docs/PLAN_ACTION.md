@@ -33,6 +33,8 @@
 
 ## 2. Liste des fonctionnalités
 
+> 💡 En complément des modules ci-dessous, voir le [catalogue des 50 features différenciantes](KILLER_FEATURES.md). Les 7 « killer features » retenues (⭐) sont intégrées directement dans la roadmap (section 4).
+
 ### Module A — Comptes et profils
 - [ ] Inscription / connexion (email + mot de passe, Google, LinkedIn)
 - [ ] Validation des candidatures (adhésion sur dossier ou parrainage) — garantit la qualité de la communauté
@@ -141,9 +143,12 @@ Cette stack permet à une très petite équipe (1 à 3 devs) de livrer un MVP en
 - Module F : agenda d'événements, inscriptions, rappels
 - Module G (base) : abonnement payant Membre via Stripe, période d'essai
 - Module C (complément) : Q&R avec meilleure réponse, recherche plein texte
+- ⭐ **Badge « identité et entreprise vérifiées »** (killer #37) : vérification SIRET via l'API Recherche d'Entreprises + contrôle manuel — la confiance devient l'ADN du club
+- ⭐ **Besoin / Offre en un clic** (killer #2) : chaque membre déclare ce qu'il cherche et ce qu'il offre ; matching automatique et notification des deux parties
+- ⭐ **SOS Entrepreneur** (killer #16) : questions urgentes poussées aux membres experts du sujet, engagement de réponse < 2h
 - Ouverture de l'inscription au-delà des fondateurs
 
-✅ **Critère de passage** : premiers abonnés payants, taux de conversion gratuit→payant mesuré.
+✅ **Critère de passage** : premiers abonnés payants, taux de conversion gratuit→payant mesuré, 10+ matchs Besoin/Offre réalisés.
 
 ### Phase 3 — Formations *(8–10 semaines)*
 **Objectif : lancer le pilier formation et le partage de revenus.**
@@ -152,14 +157,16 @@ Cette stack permet à une très petite équipe (1 à 3 devs) de livrer un MVP en
 - Stripe Connect : reversement automatique aux formateurs avec commission
 - Avis et certificats de complétion
 - Formule Premium (formations incluses ou à tarif réduit)
+- ⭐ **Matching hebdomadaire automatique** (killer #1) : chaque lundi, 3 mises en relation suggérées par membre (région, secteur, complémentarité, besoins/offres) — le « coffee roulette » du club
+- ⭐ **Marketplace inter-membres** (killer #9) : appels d'offres internes avec réponses des membres qualifiés — l'argent circule dans le club (réutilise Stripe Connect mis en place pour les formations)
 
-✅ **Critère de passage** : 5+ formations au catalogue, premières ventes, NPS formateurs positif.
+✅ **Critère de passage** : 5+ formations au catalogue, premières ventes, NPS formateurs positif, 30 %+ des matchs hebdo acceptés.
 
 ### Phase 4 — Croissance et mobile *(en continu)*
 **Objectif : scaler la communauté et l'engagement.**
 - Application mobile (React Native / Expo) avec notifications push
-- Suggestions de mise en relation intelligentes (matching)
-- Marketplace d'annonces (missions, associés, partenariats)
+- ⭐ **Mémoire collective interrogeable par IA** (killer #19) : recherche sémantique sur tout l'historique de discussions, réponses citant les threads passés et les membres à contacter
+- ⭐ **Mode « confidentiel »** (killer #48) : salons à effectif restreint entre dirigeants vérifiés du même niveau de CA, pour parler vrais chiffres
 - Programme de parrainage, gamification (badges, classements de contribution)
 - Espaces sponsorisés, partenariats B2B (banques, assureurs, experts-comptables…)
 - Déclinaison par ville / chapitres locaux
