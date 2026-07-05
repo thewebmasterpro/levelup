@@ -24,6 +24,11 @@
 
 **Différenciation** : communauté qualifiée (adhésion validée), contenu capitalisé et recherchable, et un modèle où les membres experts peuvent monétiser leurs formations — la plateforme devient un écosystème, pas juste un forum.
 
+**✅ Positionnement validé (juillet 2026)** : lancement **généraliste**, mais l'architecture prévoit dès le départ la **segmentation du networking par région et par secteur**. Concrètement :
+- Chaque membre renseigne sa (ses) région(s) et son (ses) secteur(s) dès l'inscription — données structurées (tables de référence), pas du texte libre.
+- L'annuaire, les suggestions de mise en relation, les espaces de discussion et les événements sont filtrables par région et secteur dès le MVP.
+- Le modèle de données repose sur des « chapitres » (groupes typés `region` / `secteur` / `thématique`), ce qui permettra plus tard d'activer de vrais espaces régionaux ou sectoriels (animateurs locaux, événements dédiés) sans refonte.
+
 ---
 
 ## 2. Liste des fonctionnalités
