@@ -23,40 +23,53 @@ function LoginForm() {
     setError(null);
     setInfo(null);
     setLoading(true);
-    const supabase = createClient();
 
-    if (mode === "signup") {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
-        },
-      });
-      setLoading(false);
-      if (error) {
-        setError(error.message);
-        return;
-      }
-      if (data.session) {
+    try {
+      const supabase = createClient();
+
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { full_name: fullName },
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          },
+        });
+        if (error) {
+          setError(error.message);
+          return;
+        }
+        if (data.session) {
+          router.push("/espace");
+          return;
+        }
+        setInfo(
+          "Candidature envoyée ! Vérifiez votre boîte mail pour confirmer votre adresse."
+        );
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          setError(
+            error.message === "Email not confirmed"
+              ? "Votre adresse email n'est pas encore confirmée : cliquez sur le lien reçu par email."
+              : "Email ou mot de passe incorrect."
+          );
+          return;
+        }
         router.push("/espace");
-        return;
       }
-      setInfo(
-        "Candidature envoyée ! Vérifiez votre boîte mail pour confirmer votre adresse."
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Impossible de joindre le serveur. Vérifiez votre connexion et la configuration."
       );
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+    } finally {
       setLoading(false);
-      if (error) {
-        setError("Email ou mot de passe incorrect.");
-        return;
-      }
-      router.push("/espace");
     }
   }
 
