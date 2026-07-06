@@ -10,6 +10,8 @@ type Post = {
   content: string;
   created_at: string;
   author_id: string;
+  kind: "post" | "question" | "sos";
+  best_comment_id: string | null;
   author: {
     full_name: string;
     headline: string | null;
@@ -82,6 +84,14 @@ function PostCard({
     if (next && comments === null) await loadComments();
   }
 
+  async function markBest(commentId: string) {
+    await supabase
+      .from("posts")
+      .update({ best_comment_id: commentId })
+      .eq("id", post.id);
+    onChanged();
+  }
+
   async function addComment(e: React.FormEvent) {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -114,7 +124,24 @@ function PostCard({
   }
 
   return (
-    <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <article
+      className={`rounded-2xl border p-4 ${
+        post.kind === "sos"
+          ? "border-red-400/40 bg-red-400/5"
+          : "border-zinc-800 bg-zinc-900/60"
+      }`}
+    >
+      {post.kind !== "post" && (
+        <p
+          className={`mb-2 inline-block rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+            post.kind === "sos"
+              ? "bg-red-400/15 text-red-400"
+              : "bg-amber-400/15 text-amber-400"
+          }`}
+        >
+          {post.kind === "sos" ? "🆘 SOS — besoin d'aide urgente" : "❓ Question"}
+        </p>
+      )}
       <div className="flex items-start justify-between gap-2">
         <Link
           href={`/espace/membres/${post.author_id}`}
@@ -180,17 +207,42 @@ function PostCard({
 
       {showComments && (
         <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
-          {(comments ?? []).map((c) => (
-            <div key={c.id} className="rounded-xl bg-zinc-800/60 px-3 py-2">
-              <p className="text-xs font-semibold">
-                {c.author?.full_name}{" "}
-                <span className="font-normal text-zinc-500">
-                  · {formatDate(c.created_at)}
-                </span>
-              </p>
-              <p className="mt-0.5 text-sm text-zinc-200">{c.content}</p>
-            </div>
-          ))}
+          {(comments ?? []).map((c) => {
+            const isBest = post.best_comment_id === c.id;
+            return (
+              <div
+                key={c.id}
+                className={`rounded-xl px-3 py-2 ${
+                  isBest
+                    ? "border border-emerald-400/40 bg-emerald-400/5"
+                    : "bg-zinc-800/60"
+                }`}
+              >
+                {isBest && (
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-emerald-400">
+                    ✓ Meilleure réponse
+                  </p>
+                )}
+                <p className="text-xs font-semibold">
+                  {c.author?.full_name}{" "}
+                  <span className="font-normal text-zinc-500">
+                    · {formatDate(c.created_at)}
+                  </span>
+                </p>
+                <p className="mt-0.5 text-sm text-zinc-200">{c.content}</p>
+                {post.kind === "question" &&
+                  post.author_id === me &&
+                  !isBest && (
+                    <button
+                      onClick={() => markBest(c.id)}
+                      className="mt-1 text-[11px] text-zinc-500 hover:text-emerald-400"
+                    >
+                      ✓ Marquer comme meilleure réponse
+                    </button>
+                  )}
+              </div>
+            );
+          })}
           <form onSubmit={addComment} className="flex gap-2 pt-1">
             <input
               value={newComment}
@@ -224,6 +276,8 @@ export default function PostFeed({
   const [me, setMe] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [draft, setDraft] = useState("");
+  const [kind, setKind] = useState<"post" | "question" | "sos">("post");
+  const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
 
@@ -231,16 +285,21 @@ export default function PostFeed({
     let query = supabase
       .from("posts")
       .select(
-        "id, content, created_at, author_id, author:profiles(full_name, headline, avatar_url), chapter:chapters(name, slug), comments(count), reactions(profile_id)"
+        "id, content, created_at, author_id, kind, best_comment_id, author:profiles(full_name, headline, avatar_url), chapter:chapters(name, slug), comments(count), reactions(profile_id)"
       )
       .order("created_at", { ascending: false })
       .limit(50);
     if (chapterId) query = query.eq("chapter_id", chapterId);
+    if (search.trim().length >= 2)
+      query = query.textSearch("content", search.trim(), {
+        type: "websearch",
+        config: "french",
+      });
     const { data } = await query;
     setPosts((data as unknown as Post[]) ?? []);
     setLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapterId]);
+  }, [chapterId, search]);
 
   useEffect(() => {
     createClient()
@@ -252,11 +311,22 @@ export default function PostFeed({
   async function publish(e: React.FormEvent) {
     e.preventDefault();
     if (!draft.trim() || !me) return;
+    if (
+      kind === "sos" &&
+      !window.confirm(
+        "Un SOS alerte immédiatement TOUS les membres du club. Réservez-le aux vraies urgences. Confirmer ?"
+      )
+    )
+      return;
     setPosting(true);
-    await supabase
-      .from("posts")
-      .insert({ author_id: me, chapter_id: chapterId, content: draft.trim() });
+    await supabase.from("posts").insert({
+      author_id: me,
+      chapter_id: chapterId,
+      content: draft.trim(),
+      kind,
+    });
     setDraft("");
+    setKind("post");
     setPosting(false);
     load();
   }
@@ -279,7 +349,31 @@ export default function PostFeed({
             }
             className="w-full resize-none rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm outline-none focus:border-amber-400"
           />
-          <div className="mt-2 flex justify-end">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex gap-1.5">
+              {(
+                [
+                  ["post", "Publication"],
+                  ["question", "❓ Question"],
+                  ["sos", "🆘 SOS"],
+                ] as const
+              ).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setKind(k)}
+                  className={`rounded-full px-3 py-1 text-[11px] transition ${
+                    kind === k
+                      ? k === "sos"
+                        ? "bg-red-500 font-semibold text-white"
+                        : "bg-amber-400 font-semibold text-zinc-950"
+                      : "border border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <button
               type="submit"
               disabled={posting || !draft.trim()}
@@ -296,6 +390,13 @@ export default function PostFeed({
           </p>
         )
       )}
+
+      <input
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="🔍 Rechercher dans les discussions…"
+        className="w-full rounded-full border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm outline-none focus:border-amber-400"
+      />
 
       {loading ? (
         <p className="py-8 text-center text-sm text-zinc-500">Chargement…</p>

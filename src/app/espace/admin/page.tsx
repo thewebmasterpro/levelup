@@ -14,6 +14,13 @@ type Candidate = {
   companies: { name: string }[];
 };
 
+type CompanyToVerify = {
+  id: string;
+  name: string;
+  bce_number: string;
+  owner: { full_name: string } | null;
+};
+
 type Report = {
   id: string;
   target_type: string;
@@ -29,6 +36,7 @@ export default function AdminPage() {
   const [isStaff, setIsStaff] = useState<boolean | null>(null);
   const [pending, setPending] = useState<Candidate[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
+  const [toVerify, setToVerify] = useState<CompanyToVerify[]>([]);
   const [counts, setCounts] = useState({ approved: 0, pending: 0 });
 
   async function load() {
@@ -45,7 +53,7 @@ export default function AdminPage() {
     setIsStaff(staff);
     if (!staff) return;
 
-    const [{ data: pend }, { count: approvedCount }, { data: reps }] =
+    const [{ data: pend }, { count: approvedCount }, { data: reps }, { data: comps }] =
       await Promise.all([
         supabase
           .from("profiles")
@@ -63,9 +71,16 @@ export default function AdminPage() {
           )
           .eq("status", "open")
           .order("created_at"),
+        supabase
+          .from("companies")
+          .select("id, name, bce_number, owner:profiles!companies_owner_id_fkey(full_name)")
+          .not("bce_number", "is", null)
+          .eq("bce_verified", false)
+          .order("created_at"),
       ]);
     setPending((pend as Candidate[]) ?? []);
     setReports((reps as unknown as Report[]) ?? []);
+    setToVerify((comps as unknown as CompanyToVerify[]) ?? []);
     setCounts({ approved: approvedCount ?? 0, pending: pend?.length ?? 0 });
   }
 
@@ -76,6 +91,11 @@ export default function AdminPage() {
 
   async function decide(id: string, status: "approved" | "rejected") {
     await supabase.from("profiles").update({ status }).eq("id", id);
+    load();
+  }
+
+  async function verifyCompany(id: string) {
+    await supabase.from("companies").update({ bce_verified: true }).eq("id", id);
     load();
   }
 
@@ -161,6 +181,47 @@ export default function AdminPage() {
                     </button>
                   </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400">
+          Entreprises à vérifier ({toVerify.length})
+        </h2>
+        {toVerify.length === 0 ? (
+          <p className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 text-center text-sm text-zinc-500">
+            Aucune vérification BCE en attente.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {toVerify.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4"
+              >
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold">{c.name}</p>
+                  <p className="text-xs text-zinc-400">
+                    BCE {c.bce_number} · {c.owner?.full_name}
+                  </p>
+                  <a
+                    href={`https://kbopub.economie.fgov.be/kbopub/zoeknummerform.html?nummer=${encodeURIComponent(c.bce_number)}&actionLu=Recherche`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-amber-400 hover:underline"
+                  >
+                    Vérifier sur la BCE ↗
+                  </a>
+                </div>
+                <button
+                  onClick={() => verifyCompany(c.id)}
+                  className="shrink-0 rounded-full bg-emerald-500/90 px-4 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500"
+                >
+                  ✓ Marquer vérifiée
+                </button>
               </div>
             ))}
           </div>

@@ -22,6 +22,7 @@ type Member = {
     role_title: string | null;
     city: string | null;
     website_url: string | null;
+    bce_verified: boolean;
   }[];
   profile_regions: { region: { name: string } | null }[];
   profile_sectors: { sector: { name: string } | null }[];
@@ -57,7 +58,7 @@ export default function MembrePage({
       supabase
         .from("profiles")
         .select(
-          "id, full_name, avatar_url, headline, bio, city, website_url, linkedin_url, companies(id, name, role_title, city, website_url), profile_regions(region:regions(name)), profile_sectors(sector:sectors(name))"
+          "id, full_name, avatar_url, headline, bio, city, website_url, linkedin_url, companies(id, name, role_title, city, website_url, bce_verified), profile_regions(region:regions(name)), profile_sectors(sector:sectors(name))"
         )
         .eq("id", id)
         .maybeSingle(),
@@ -240,7 +241,14 @@ export default function MembrePage({
                 key={c.id}
                 className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4"
               >
-                <p className="font-semibold">{c.name}</p>
+                <p className="font-semibold">
+                  {c.name}
+                  {c.bce_verified && (
+                    <span className="ml-2 rounded-full bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+                      ✓ Vérifiée BCE
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-zinc-400">
                   {[c.role_title, c.city].filter(Boolean).join(" · ")}
                 </p>

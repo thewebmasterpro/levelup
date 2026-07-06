@@ -15,7 +15,7 @@ type Member = {
   avatar_url: string | null;
   headline: string | null;
   city: string | null;
-  companies: { name: string }[];
+  companies: { name: string; bce_verified: boolean }[];
   profile_regions: { region_id: string; region: { name: string } | null }[];
   profile_sectors: { sector_id: string; sector: { name: string } | null }[];
 };
@@ -52,7 +52,7 @@ export default function AnnuairePage() {
         supabase
           .from("profiles")
           .select(
-            "id, full_name, avatar_url, headline, city, companies(name), profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
+            "id, full_name, avatar_url, headline, city, companies(name, bce_verified), profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
           )
           .neq("id", user.id)
           .eq("status", "approved")
@@ -232,9 +232,23 @@ export default function AnnuairePage() {
                       <p className="mt-1 text-xs text-zinc-400">{m.headline}</p>
                     )}
                     <p className="mt-1 text-xs text-zinc-500">
-                      {[...m.companies.map((c) => c.name), m.city]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {m.companies.map((c, i) => (
+                        <span key={i}>
+                          {i > 0 && " · "}
+                          {c.name}
+                          {c.bce_verified && (
+                            <span
+                              title="Entreprise vérifiée (BCE)"
+                              className="text-emerald-400"
+                            >
+                              {" "}
+                              ✓
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                      {m.companies.length > 0 && m.city && " · "}
+                      {m.city}
                     </p>
                     <p className="mt-1 flex flex-wrap gap-1">
                       {m.profile_regions.map(

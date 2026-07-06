@@ -3,7 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [
+const items: {
+  href: string;
+  label: string;
+  exact?: boolean;
+  alsoMatch?: string[];
+  icon: React.ReactNode;
+}[] = [
   {
     href: "/espace",
     label: "Fil",
@@ -16,14 +22,20 @@ const items = [
     ),
   },
   {
-    href: "/espace/chapitres",
-    label: "Chapitres",
+    href: "/espace/club",
+    label: "Club",
+    alsoMatch: [
+      "/espace/chapitres",
+      "/espace/evenements",
+      "/espace/ressources",
+      "/espace/annonces",
+    ],
     icon: (
       <>
-        <line x1="4" y1="9" x2="20" y2="9" />
-        <line x1="4" y1="15" x2="20" y2="15" />
-        <line x1="10" y1="3" x2="8" y2="21" />
-        <line x1="16" y1="3" x2="14" y2="21" />
+        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+        <rect x="14" y="14" width="7" height="7" rx="1.5" />
       </>
     ),
   },
@@ -67,7 +79,8 @@ export default function BottomNav() {
         {items.map((item) => {
           const active = item.exact
             ? pathname === item.href
-            : pathname.startsWith(item.href);
+            : pathname.startsWith(item.href) ||
+              (item.alsoMatch ?? []).some((p) => pathname.startsWith(p));
           return (
             <Link
               key={item.href}
