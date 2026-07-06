@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "@/components/Avatar";
 
 type Ref = { id: string; name: string };
 
@@ -36,6 +38,9 @@ export default function ProfilPage() {
   });
   const [companies, setCompanies] = useState<Company[]>([]);
   const [newCo, setNewCo] = useState(emptyCompany);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
   const [regions, setRegions] = useState<Ref[]>([]);
   const [sectors, setSectors] = useState<Ref[]>([]);
   const [myRegions, setMyRegions] = useState<Set<string>>(new Set());
@@ -43,6 +48,7 @@ export default function ProfilPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -56,7 +62,7 @@ export default function ProfilPage() {
           supabase
             .from("profiles")
             .select(
-              "full_name, headline, city, bio, website_url, linkedin_url, is_public"
+              "full_name, headline, city, bio, website_url, linkedin_url, is_public, avatar_url"
             )
             .eq("id", user.id)
             .single(),
@@ -76,6 +82,7 @@ export default function ProfilPage() {
             .eq("owner_id", user.id)
             .order("created_at"),
         ]);
+      if (p) setAvatarUrl(p.avatar_url ?? null);
       if (p)
         setForm({
           full_name: p.full_name ?? "",
@@ -101,6 +108,29 @@ export default function ProfilPage() {
     if (next.has(id)) next.delete(id);
     else next.add(id);
     return next;
+  }
+
+  async function uploadAvatar(file: File) {
+    if (!me) return;
+    if (file.size > 3 * 1024 * 1024) {
+      window.alert("L'image dépasse 3 Mo — choisissez une image plus légère.");
+      return;
+    }
+    setUploading(true);
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${me}/avatar.${ext}`;
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (!error) {
+      const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = `${data.publicUrl}?v=${Date.now()}`;
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", me);
+      setAvatarUrl(url);
+    } else {
+      window.alert("Échec de l'envoi : " + error.message);
+    }
+    setUploading(false);
   }
 
   async function addCompany() {
@@ -132,8 +162,9 @@ export default function ProfilPage() {
     if (!me) return;
     setSaving(true);
     setSaved(false);
+    setSaveError(null);
 
-    await supabase
+    const { error } = await supabase
       .from("profiles")
       .update({
         full_name: form.full_name,
@@ -145,6 +176,12 @@ export default function ProfilPage() {
         is_public: form.is_public,
       })
       .eq("id", me);
+
+    if (error) {
+      setSaveError("Échec de l'enregistrement : " + error.message);
+      setSaving(false);
+      return;
+    }
 
     await supabase.from("profile_regions").delete().eq("profile_id", me);
     if (myRegions.size > 0)
@@ -171,6 +208,34 @@ export default function ProfilPage() {
   return (
     <form onSubmit={save} className="space-y-5">
       <h1 className="text-xl font-bold">Mon profil</h1>
+
+      <div className="flex items-center gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+        <Avatar url={avatarUrl} name={form.full_name} size="lg" />
+        <div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) uploadAvatar(f);
+              e.target.value = "";
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="rounded-full border border-amber-400/50 px-4 py-1.5 text-xs font-semibold text-amber-400 transition hover:bg-amber-400/10 disabled:opacity-50"
+          >
+            {uploading ? "Envoi…" : "Changer ma photo"}
+          </button>
+          <p className="mt-1 text-[11px] text-zinc-500">
+            JPG ou PNG, 3 Mo max.
+          </p>
+        </div>
+      </div>
 
       <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
         <label className="block text-sm">
@@ -373,7 +438,17 @@ export default function ProfilPage() {
           {saving ? "Enregistrement…" : "Enregistrer"}
         </button>
         {saved && <span className="text-sm text-emerald-400">Profil mis à jour ✓</span>}
+        {saveError && <span className="text-sm text-red-400">{saveError}</span>}
       </div>
+
+      <p className="pb-2 text-center">
+        <Link
+          href="/mot-de-passe"
+          className="text-xs text-zinc-400 hover:text-amber-400"
+        >
+          Changer mon mot de passe
+        </Link>
+      </p>
     </form>
   );
 }

@@ -142,6 +142,35 @@ function LoginForm() {
               />
             </div>
 
+            {mode === "signin" && (
+              <button
+                type="button"
+                onClick={async () => {
+                  setError(null);
+                  setInfo(null);
+                  if (!email) {
+                    setError(
+                      "Renseignez d'abord votre email, puis recliquez sur « Mot de passe oublié ? »."
+                    );
+                    return;
+                  }
+                  const supabase = createClient();
+                  const { error } = await supabase.auth.resetPasswordForEmail(
+                    email,
+                    { redirectTo: `${window.location.origin}/mot-de-passe` }
+                  );
+                  if (error) setError(error.message);
+                  else
+                    setInfo(
+                      "Email de réinitialisation envoyé — vérifiez votre boîte mail."
+                    );
+                }}
+                className="text-xs text-zinc-400 hover:text-amber-400"
+              >
+                Mot de passe oublié ?
+              </button>
+            )}
+
             {error && <p className="text-sm text-red-400">{error}</p>}
             {info && <p className="text-sm text-emerald-400">{info}</p>}
 

@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ensureDm } from "@/lib/dm";
+import Avatar from "@/components/Avatar";
 
 type Ref = { id: string; name: string };
 
 type Member = {
   id: string;
   full_name: string;
+  avatar_url: string | null;
   headline: string | null;
   city: string | null;
   companies: { name: string }[];
@@ -49,7 +52,7 @@ export default function AnnuairePage() {
         supabase
           .from("profiles")
           .select(
-            "id, full_name, headline, city, companies(name), profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
+            "id, full_name, avatar_url, headline, city, companies(name), profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
           )
           .neq("id", user.id)
           .eq("status", "approved")
@@ -216,9 +219,17 @@ export default function AnnuairePage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-semibold">{m.full_name}</p>
+                    <Link
+                      href={`/espace/membres/${m.id}`}
+                      className="flex items-center gap-2.5"
+                    >
+                      <Avatar url={m.avatar_url} name={m.full_name} size="sm" />
+                      <span className="font-semibold hover:text-amber-400">
+                        {m.full_name}
+                      </span>
+                    </Link>
                     {m.headline && (
-                      <p className="text-xs text-zinc-400">{m.headline}</p>
+                      <p className="mt-1 text-xs text-zinc-400">{m.headline}</p>
                     )}
                     <p className="mt-1 text-xs text-zinc-500">
                       {[...m.companies.map((c) => c.name), m.city]

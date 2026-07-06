@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BottomNav from "@/components/BottomNav";
+import NotificationsBell from "@/components/NotificationsBell";
 
 export default async function EspaceLayout({
   children,
@@ -43,6 +44,7 @@ export default async function EspaceLayout({
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            {approved && <NotificationsBell />}
             {staff && (
               <Link
                 href="/espace/admin"

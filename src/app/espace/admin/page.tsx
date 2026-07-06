@@ -14,10 +14,21 @@ type Candidate = {
   companies: { name: string }[];
 };
 
+type Report = {
+  id: string;
+  target_type: string;
+  target_id: string;
+  reason: string | null;
+  excerpt: string | null;
+  created_at: string;
+  reporter: { full_name: string } | null;
+};
+
 export default function AdminPage() {
   const supabase = createClient();
   const [isStaff, setIsStaff] = useState<boolean | null>(null);
   const [pending, setPending] = useState<Candidate[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [counts, setCounts] = useState({ approved: 0, pending: 0 });
 
   async function load() {
@@ -34,18 +45,27 @@ export default function AdminPage() {
     setIsStaff(staff);
     if (!staff) return;
 
-    const [{ data: pend }, { count: approvedCount }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("id, full_name, headline, city, status, created_at, companies(name)")
-        .eq("status", "pending")
-        .order("created_at"),
-      supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "approved"),
-    ]);
+    const [{ data: pend }, { count: approvedCount }, { data: reps }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, full_name, headline, city, status, created_at, companies(name)")
+          .eq("status", "pending")
+          .order("created_at"),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "approved"),
+        supabase
+          .from("reports")
+          .select(
+            "id, target_type, target_id, reason, excerpt, created_at, reporter:profiles!reports_reporter_id_fkey(full_name)"
+          )
+          .eq("status", "open")
+          .order("created_at"),
+      ]);
     setPending((pend as Candidate[]) ?? []);
+    setReports((reps as unknown as Report[]) ?? []);
     setCounts({ approved: approvedCount ?? 0, pending: pend?.length ?? 0 });
   }
 
@@ -57,6 +77,20 @@ export default function AdminPage() {
   async function decide(id: string, status: "approved" | "rejected") {
     await supabase.from("profiles").update({ status }).eq("id", id);
     load();
+  }
+
+  async function closeReport(r: Report, status: "resolved" | "dismissed") {
+    await supabase.from("reports").update({ status }).eq("id", r.id);
+    load();
+  }
+
+  async function deleteReported(r: Report) {
+    if (!window.confirm("Supprimer définitivement ce contenu ?")) return;
+    if (r.target_type === "post")
+      await supabase.from("posts").delete().eq("id", r.target_id);
+    if (r.target_type === "comment")
+      await supabase.from("comments").delete().eq("id", r.target_id);
+    await closeReport(r, "resolved");
   }
 
   if (isStaff === null)
@@ -126,6 +160,68 @@ export default function AdminPage() {
                       Refuser
                     </button>
                   </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400">
+          Signalements ({reports.length})
+        </h2>
+        {reports.length === 0 ? (
+          <p className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 text-center text-sm text-zinc-500">
+            Aucun signalement en attente 👍
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {reports.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-2xl border border-red-400/20 bg-zinc-900/60 p-4"
+              >
+                <p className="text-xs text-zinc-500">
+                  {r.target_type === "post"
+                    ? "Publication"
+                    : r.target_type === "comment"
+                      ? "Commentaire"
+                      : "Profil"}{" "}
+                  signalé·e par {r.reporter?.full_name} ·{" "}
+                  {formatDate(r.created_at)}
+                </p>
+                {r.excerpt && (
+                  <p className="mt-2 rounded-xl bg-zinc-800/60 px-3 py-2 text-sm italic text-zinc-300">
+                    « {r.excerpt} »
+                  </p>
+                )}
+                {r.reason && (
+                  <p className="mt-2 text-sm text-zinc-400">
+                    Motif : {r.reason}
+                  </p>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {(r.target_type === "post" || r.target_type === "comment") && (
+                    <button
+                      onClick={() => deleteReported(r)}
+                      className="rounded-full bg-red-500/90 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-500"
+                    >
+                      Supprimer le contenu
+                    </button>
+                  )}
+                  <button
+                    onClick={() => closeReport(r, "resolved")}
+                    className="rounded-full border border-zinc-700 px-4 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+                  >
+                    Marquer traité
+                  </button>
+                  <button
+                    onClick={() => closeReport(r, "dismissed")}
+                    className="rounded-full border border-zinc-700 px-4 py-1.5 text-xs text-zinc-300 hover:border-zinc-500"
+                  >
+                    Rejeter
+                  </button>
                 </div>
               </div>
             ))}

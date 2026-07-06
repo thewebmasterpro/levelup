@@ -1,14 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import Avatar from "@/components/Avatar";
 
 type Post = {
   id: string;
   content: string;
   created_at: string;
   author_id: string;
-  author: { full_name: string; headline: string | null } | null;
+  author: {
+    full_name: string;
+    headline: string | null;
+    avatar_url: string | null;
+  } | null;
   chapter: { name: string; slug: string } | null;
   comments: { count: number }[];
   reactions: { profile_id: string }[];
@@ -92,15 +98,44 @@ function PostCard({
     onChanged();
   }
 
+  async function report(targetType: "post" | "comment", targetId: string, excerpt: string) {
+    const reason = window.prompt(
+      "Pourquoi signalez-vous ce contenu ? (spam, propos inappropriés…)"
+    );
+    if (reason === null) return;
+    await supabase.from("reports").insert({
+      reporter_id: me,
+      target_type: targetType,
+      target_id: targetId,
+      reason: reason || null,
+      excerpt: excerpt.slice(0, 140),
+    });
+    window.alert("Merci, le signalement a été transmis à la modération.");
+  }
+
   return (
     <article className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-sm font-semibold">{post.author?.full_name}</p>
-          {post.author?.headline && (
-            <p className="text-xs text-zinc-400">{post.author.headline}</p>
-          )}
-        </div>
+        <Link
+          href={`/espace/membres/${post.author_id}`}
+          className="flex min-w-0 items-center gap-2.5"
+        >
+          <Avatar
+            url={post.author?.avatar_url}
+            name={post.author?.full_name ?? "?"}
+            size="sm"
+          />
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold hover:text-amber-400">
+              {post.author?.full_name}
+            </span>
+            {post.author?.headline && (
+              <span className="block truncate text-xs text-zinc-400">
+                {post.author.headline}
+              </span>
+            )}
+          </span>
+        </Link>
         <div className="text-right text-xs text-zinc-500">
           {formatDate(post.created_at)}
           {post.chapter && (
@@ -126,12 +161,19 @@ function PostCard({
         <button onClick={toggleComments} className="transition hover:text-zinc-200">
           💬 {commentCount > 0 && commentCount} Commenter
         </button>
-        {post.author_id === me && (
+        {post.author_id === me ? (
           <button
             onClick={deletePost}
             className="ml-auto text-zinc-600 transition hover:text-red-400"
           >
             Supprimer
+          </button>
+        ) : (
+          <button
+            onClick={() => report("post", post.id, post.content)}
+            className="ml-auto text-zinc-600 transition hover:text-red-400"
+          >
+            Signaler
           </button>
         )}
       </div>
@@ -189,7 +231,7 @@ export default function PostFeed({
     let query = supabase
       .from("posts")
       .select(
-        "id, content, created_at, author_id, author:profiles(full_name, headline), chapter:chapters(name, slug), comments(count), reactions(profile_id)"
+        "id, content, created_at, author_id, author:profiles(full_name, headline, avatar_url), chapter:chapters(name, slug), comments(count), reactions(profile_id)"
       )
       .order("created_at", { ascending: false })
       .limit(50);
