@@ -8,10 +8,10 @@ type Candidate = {
   id: string;
   full_name: string;
   headline: string | null;
-  company_name: string | null;
   city: string | null;
   status: string;
   created_at: string;
+  companies: { name: string }[];
 };
 
 export default function AdminPage() {
@@ -37,7 +37,7 @@ export default function AdminPage() {
     const [{ data: pend }, { count: approvedCount }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name, headline, company_name, city, status, created_at")
+        .select("id, full_name, headline, city, status, created_at, companies(name)")
         .eq("status", "pending")
         .order("created_at"),
       supabase
@@ -106,8 +106,9 @@ export default function AdminPage() {
                       <p className="text-xs text-zinc-400">{c.headline}</p>
                     )}
                     <p className="mt-1 text-xs text-zinc-500">
-                      {[c.company_name, c.city].filter(Boolean).join(" · ") ||
-                        "Profil non renseigné"}{" "}
+                      {[...c.companies.map((co) => co.name), c.city]
+                        .filter(Boolean)
+                        .join(" · ") || "Profil non renseigné"}{" "}
                       · Candidature du {formatDate(c.created_at)}
                     </p>
                   </div>

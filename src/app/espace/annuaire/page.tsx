@@ -11,8 +11,8 @@ type Member = {
   id: string;
   full_name: string;
   headline: string | null;
-  company_name: string | null;
   city: string | null;
+  companies: { name: string }[];
   profile_regions: { region_id: string; region: { name: string } | null }[];
   profile_sectors: { sector_id: string; sector: { name: string } | null }[];
 };
@@ -49,7 +49,7 @@ export default function AnnuairePage() {
         supabase
           .from("profiles")
           .select(
-            "id, full_name, headline, company_name, city, profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
+            "id, full_name, headline, city, companies(name), profile_regions(region_id, region:regions(name)), profile_sectors(sector_id, sector:sectors(name))"
           )
           .neq("id", user.id)
           .eq("status", "approved")
@@ -109,7 +109,7 @@ export default function AnnuairePage() {
   const filtered = members.filter((m) => {
     if (
       search &&
-      !`${m.full_name} ${m.company_name ?? ""} ${m.city ?? ""}`
+      !`${m.full_name} ${m.companies.map((c) => c.name).join(" ")} ${m.city ?? ""}`
         .toLowerCase()
         .includes(search.toLowerCase())
     )
@@ -221,7 +221,9 @@ export default function AnnuairePage() {
                       <p className="text-xs text-zinc-400">{m.headline}</p>
                     )}
                     <p className="mt-1 text-xs text-zinc-500">
-                      {[m.company_name, m.city].filter(Boolean).join(" · ")}
+                      {[...m.companies.map((c) => c.name), m.city]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                     <p className="mt-1 flex flex-wrap gap-1">
                       {m.profile_regions.map(
