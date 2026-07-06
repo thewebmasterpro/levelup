@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BizClub — Le réseau des entrepreneurs",
+  title: "LevelUpNow (bêta) — Le réseau des entrepreneurs",
   description:
     "Échangez, développez votre réseau et montez en compétences avec une communauté d'entrepreneurs qualifiée.",
 };

@@ -27,8 +27,13 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full bg-zinc-950 text-zinc-100">
       <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-6">
-        <span className="text-xl font-bold tracking-tight">
-          Biz<span className="text-amber-400">Club</span>
+        <span className="flex items-center gap-2 text-xl font-bold tracking-tight">
+          <span>
+            LevelUp<span className="text-amber-400">Now</span>
+          </span>
+          <span className="rounded-full border border-amber-400/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+            bêta
+          </span>
         </span>
         <Link
           href="/login"
@@ -79,7 +84,8 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-zinc-800 py-8 text-center text-sm text-zinc-500">
-        © {new Date().getFullYear()} BizClub — La communauté des entrepreneurs
+        © {new Date().getFullYear()} LevelUpNow (bêta) — La communauté des
+        entrepreneurs
       </footer>
     </main>
   );

@@ -1,6 +1,6 @@
-# BizClub — Catalogue des 50 features différenciantes
+# LevelUpNow — Catalogue des 50 features différenciantes
 
-> Réservoir d'idées pour faire de BizClub une plateforme unique. Les 7 features marquées ⭐ sont les **killer features prioritaires**, intégrées à la roadmap du [plan d'action](PLAN_ACTION.md). Les autres alimentent le backlog des phases futures.
+> Réservoir d'idées pour faire de LevelUpNow une plateforme unique. Les 7 features marquées ⭐ sont les **killer features prioritaires**, intégrées à la roadmap du [plan d'action](PLAN_ACTION.md). Les autres alimentent le backlog des phases futures.
 
 ## Pourquoi ces 7-là en priorité
 

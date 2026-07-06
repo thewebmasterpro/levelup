@@ -76,8 +76,16 @@ function LoginForm() {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-zinc-950 px-6 text-zinc-100">
       <div className="w-full max-w-md">
-        <Link href="/" className="mb-8 block text-center text-2xl font-bold">
-          Biz<span className="text-amber-400">Club</span>
+        <Link
+          href="/"
+          className="mb-8 flex items-center justify-center gap-2 text-2xl font-bold"
+        >
+          <span>
+            LevelUp<span className="text-amber-400">Now</span>
+          </span>
+          <span className="rounded-full border border-amber-400/40 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-400">
+            bêta
+          </span>
         </Link>
 
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-8">

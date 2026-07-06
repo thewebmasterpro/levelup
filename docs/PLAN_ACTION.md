@@ -1,4 +1,4 @@
-# Plan d'action — BizClub, la plateforme des entrepreneurs
+# Plan d'action — LevelUpNow, la plateforme des entrepreneurs
 
 > Espace communautaire pour entrepreneurs : échanger, discuter, partager des informations et des contacts, et proposer des formations.
 

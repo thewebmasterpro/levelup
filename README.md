@@ -1,6 +1,6 @@
-# BizClub — Plateforme communautaire pour entrepreneurs
+# LevelUpNow (bêta) — Plateforme communautaire pour entrepreneurs
 
-BizClub est une application qui offre aux entrepreneurs un espace pour **échanger, discuter, partager des informations et des contacts, et proposer des formations**. Positionnement généraliste, avec un networking segmentable par **région** et par **secteur** dès la conception.
+LevelUpNow est une application qui offre aux entrepreneurs un espace pour **échanger, discuter, partager des informations et des contacts, et proposer des formations**. Positionnement généraliste, avec un networking segmentable par **région** et par **secteur** dès la conception.
 
 ## Documentation
 
