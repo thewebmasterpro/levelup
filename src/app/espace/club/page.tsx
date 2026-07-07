@@ -26,6 +26,18 @@ const sections = [
     description:
       "Je cherche… / Je propose… — le matching se charge du reste",
   },
+  {
+    href: "/espace/formations",
+    emoji: "🎓",
+    title: "Formations",
+    description: "Montez en compétences avec les experts de la communauté",
+  },
+  {
+    href: "/espace/matchs",
+    emoji: "☕",
+    title: "Matchs de la semaine",
+    description: "Chaque lundi, 3 membres à rencontrer, choisis pour vous",
+  },
 ];
 
 export default function ClubPage() {

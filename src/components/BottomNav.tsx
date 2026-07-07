@@ -29,6 +29,8 @@ const items: {
       "/espace/evenements",
       "/espace/ressources",
       "/espace/annonces",
+      "/espace/formations",
+      "/espace/matchs",
     ],
     icon: (
       <>
