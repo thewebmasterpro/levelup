@@ -13,9 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://levelupnow.be"),
   title: "LevelUpNow (bêta) — Le réseau des entrepreneurs",
   description:
-    "Échangez, développez votre réseau et montez en compétences avec une communauté d'entrepreneurs qualifiée.",
+    "Échangez, développez votre réseau et montez en compétences avec une communauté d'entrepreneurs qualifiée, en Belgique.",
+  openGraph: {
+    title: "LevelUpNow — Le réseau privé des entrepreneurs",
+    description:
+      "Communauté qualifiée sur candidature : entraide, networking par province et secteur, formations entre pairs.",
+    url: "https://levelupnow.be",
+    siteName: "LevelUpNow",
+    locale: "fr_BE",
+    type: "website",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

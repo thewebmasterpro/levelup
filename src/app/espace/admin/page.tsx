@@ -38,6 +38,12 @@ export default function AdminPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [toVerify, setToVerify] = useState<CompanyToVerify[]>([]);
   const [counts, setCounts] = useState({ approved: 0, pending: 0 });
+  const [activity, setActivity] = useState({
+    postsWeek: 0,
+    connectionsAccepted: 0,
+    upcomingEvents: 0,
+    openListings: 0,
+  });
 
   async function load() {
     const {
@@ -82,6 +88,33 @@ export default function AdminPage() {
     setReports((reps as unknown as Report[]) ?? []);
     setToVerify((comps as unknown as CompanyToVerify[]) ?? []);
     setCounts({ approved: approvedCount ?? 0, pending: pend?.length ?? 0 });
+
+    const weekAgo = new Date(Date.now() - 7 * 86400_000).toISOString();
+    const [{ count: postsWeek }, { count: connectionsAccepted }, { count: upcomingEvents }, { count: openListings }] =
+      await Promise.all([
+        supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", weekAgo),
+        supabase
+          .from("connections")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "accepted"),
+        supabase
+          .from("events")
+          .select("id", { count: "exact", head: true })
+          .gte("starts_at", new Date().toISOString()),
+        supabase
+          .from("listings")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "open"),
+      ]);
+    setActivity({
+      postsWeek: postsWeek ?? 0,
+      connectionsAccepted: connectionsAccepted ?? 0,
+      upcomingEvents: upcomingEvents ?? 0,
+      openListings: openListings ?? 0,
+    });
   }
 
   useEffect(() => {
@@ -136,6 +169,25 @@ export default function AdminPage() {
           <p className="text-2xl font-bold text-amber-400">{counts.pending}</p>
           <p className="text-xs text-zinc-400">Candidatures en attente</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-2">
+        {(
+          [
+            [activity.postsWeek, "Posts / 7j"],
+            [activity.connectionsAccepted, "Connexions"],
+            [activity.upcomingEvents, "Événements"],
+            [activity.openListings, "Annonces"],
+          ] as const
+        ).map(([n, label]) => (
+          <div
+            key={label}
+            className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3 text-center"
+          >
+            <p className="text-lg font-bold text-zinc-200">{n}</p>
+            <p className="text-[10px] text-zinc-500">{label}</p>
+          </div>
+        ))}
       </div>
 
       <section>

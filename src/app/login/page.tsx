@@ -185,6 +185,23 @@ function LoginForm() {
                   ? "Envoyer ma candidature"
                   : "Se connecter"}
             </button>
+
+            {mode === "signup" && (
+              <p className="text-center text-[11px] text-zinc-500">
+                En candidatant, vous acceptez la{" "}
+                <Link href="/charte" className="text-amber-400 hover:underline">
+                  charte de la communauté
+                </Link>{" "}
+                et la{" "}
+                <Link
+                  href="/confidentialite"
+                  className="text-amber-400 hover:underline"
+                >
+                  politique de confidentialité
+                </Link>
+                .
+              </p>
+            )}
           </form>
         </div>
 

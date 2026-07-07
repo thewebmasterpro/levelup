@@ -84,8 +84,21 @@ export default function Home() {
       </section>
 
       <footer className="border-t border-zinc-800 py-8 text-center text-sm text-zinc-500">
-        © {new Date().getFullYear()} LevelUpNow (bêta) — La communauté des
-        entrepreneurs
+        <p>
+          © {new Date().getFullYear()} LevelUpNow (bêta) — La communauté des
+          entrepreneurs
+        </p>
+        <p className="mt-2 flex flex-wrap justify-center gap-4 text-xs">
+          <Link href="/charte" className="hover:text-zinc-300">
+            Charte de la communauté
+          </Link>
+          <Link href="/confidentialite" className="hover:text-zinc-300">
+            Confidentialité
+          </Link>
+          <Link href="/mentions-legales" className="hover:text-zinc-300">
+            Mentions légales
+          </Link>
+        </p>
       </footer>
     </main>
   );
