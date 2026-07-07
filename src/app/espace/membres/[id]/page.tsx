@@ -46,6 +46,16 @@ export default function MembrePage({
   const [me, setMe] = useState<string | null>(null);
   const [member, setMember] = useState<Member | null>(null);
   const [conn, setConn] = useState<Connection | null>(null);
+  const [badges, setBadges] = useState<string[]>([]);
+  const [stats, setStats] = useState<{
+    comments: number;
+    best_answers: number;
+    selected_responses: number;
+    resources: number;
+    courses: number;
+    accepted_connections: number;
+    karma: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function load() {
@@ -72,6 +82,16 @@ export default function MembrePage({
     ]);
     setMember(m as unknown as Member | null);
     setConn(c as Connection | null);
+
+    const [{ data: badgeRows }, { data: statRows }] = await Promise.all([
+      supabase.rpc("member_badges", { uid: id }),
+      supabase.rpc("member_stats", { uid: id }),
+    ]);
+    setBadges(
+      ((badgeRows as { badge: string }[]) ?? []).map((b) => b.badge)
+    );
+    const s = (statRows as typeof stats[]) ?? [];
+    setStats(s[0] ?? null);
     setLoading(false);
   }
 
@@ -140,6 +160,19 @@ export default function MembrePage({
             )}
           </div>
         </div>
+
+        {badges.length > 0 && (
+          <p className="mt-3 flex flex-wrap gap-1.5">
+            {badges.map((b) => (
+              <span
+                key={b}
+                className="rounded-full border border-amber-400/40 bg-amber-400/10 px-2.5 py-0.5 text-[11px] font-semibold text-amber-400"
+              >
+                {b}
+              </span>
+            ))}
+          </p>
+        )}
 
         {member.bio && (
           <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
@@ -229,6 +262,34 @@ export default function MembrePage({
           </div>
         )}
       </div>
+
+      {stats && stats.karma > 0 && (
+        <section>
+          <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-amber-400">
+            Contributions au club · {stats.karma} pts
+          </h2>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                [stats.comments, "Réponses"],
+                [stats.best_answers, "Meilleures réponses"],
+                [stats.selected_responses, "Propositions retenues"],
+                [stats.resources, "Ressources"],
+                [stats.courses, "Formations"],
+                [stats.accepted_connections, "Connexions"],
+              ] as const
+            ).map(([n, label]) => (
+              <div
+                key={label}
+                className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3 text-center"
+              >
+                <p className="text-lg font-bold text-zinc-200">{n}</p>
+                <p className="text-[10px] leading-tight text-zinc-500">{label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {member.companies.length > 0 && (
         <section>

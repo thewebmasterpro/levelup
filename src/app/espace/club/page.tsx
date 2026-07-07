@@ -62,10 +62,19 @@ type KarmaRow = {
 
 export default async function ClubPage() {
   const supabase = await createClient();
-  const { data: leaderboard } = await supabase.rpc("karma_leaderboard", {
-    limit_count: 5,
-  });
-  const top = ((leaderboard as KarmaRow[]) ?? []).filter((r) => r.points > 0);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const [{ data: monthly }, { data: allTime }] = await Promise.all([
+    supabase.rpc("karma_leaderboard", {
+      limit_count: 5,
+      since: monthStart.toISOString(),
+    }),
+    supabase.rpc("karma_leaderboard", { limit_count: 5 }),
+  ]);
+  const topMonth = ((monthly as KarmaRow[]) ?? []).filter((r) => r.points > 0);
+  const top = ((allTime as KarmaRow[]) ?? []).filter((r) => r.points > 0);
 
   return (
     <div className="space-y-6">
@@ -84,10 +93,38 @@ export default async function ClubPage() {
         ))}
       </div>
 
+      {topMonth.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400">
+            🔥 Top contributeurs du mois
+          </h2>
+          <div className="space-y-2">
+            {topMonth.map((r, i) => (
+              <Link
+                key={r.profile_id}
+                href={`/espace/membres/${r.profile_id}`}
+                className="flex items-center justify-between rounded-2xl border border-amber-400/30 bg-amber-400/5 p-3 transition hover:border-amber-400/60"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="w-5 text-center font-bold text-amber-400">
+                    {i + 1}
+                  </span>
+                  <Avatar url={r.avatar_url} name={r.full_name} size="sm" />
+                  <span className="text-sm font-medium">{r.full_name}</span>
+                </span>
+                <span className="text-sm font-semibold text-amber-400">
+                  {r.points} pts
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {top.length > 0 && (
         <section>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400">
-            🏆 Top contributeurs
+            🏆 Classement général
           </h2>
           <div className="space-y-2">
             {top.map((r, i) => (
