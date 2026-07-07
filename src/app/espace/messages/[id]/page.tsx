@@ -19,6 +19,8 @@ export default function ConversationPage({
   const { id } = use(params);
   const supabase = createClient();
   const [me, setMe] = useState<string | null>(null);
+  const [convTitle, setConvTitle] = useState<string | null>(null);
+  const [confidential, setConfidential] = useState(false);
   const [names, setNames] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -41,6 +43,14 @@ export default function ConversationPage({
       } = await supabase.auth.getUser();
       if (!user) return;
       setMe(user.id);
+
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("title, is_confidential")
+        .eq("id", id)
+        .maybeSingle();
+      setConvTitle(conv?.title ?? null);
+      setConfidential(conv?.is_confidential ?? false);
 
       const { data: parts } = await supabase
         .from("conversation_participants")
@@ -112,8 +122,14 @@ export default function ConversationPage({
           ← Messages
         </Link>
         <h1 className="text-lg font-bold">
-          {otherNames.join(", ") || "Conversation"}
+          {confidential && "🔒 "}
+          {convTitle ?? otherNames.join(", ") ?? "Conversation"}
         </h1>
+        {convTitle && otherNames.length > 0 && (
+          <p className="text-xs text-zinc-500">
+            Avec {otherNames.join(", ")}
+          </p>
+        )}
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">

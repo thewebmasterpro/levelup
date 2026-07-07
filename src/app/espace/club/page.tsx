@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import Avatar from "@/components/Avatar";
 
 const sections = [
   {
@@ -23,8 +25,7 @@ const sections = [
     href: "/espace/annonces",
     emoji: "🤝",
     title: "Besoins & Offres",
-    description:
-      "Je cherche… / Je propose… — le matching se charge du reste",
+    description: "Je cherche… / Je propose… — le matching se charge du reste",
   },
   {
     href: "/espace/formations",
@@ -38,11 +39,36 @@ const sections = [
     title: "Matchs de la semaine",
     description: "Chaque lundi, 3 membres à rencontrer, choisis pour vous",
   },
+  {
+    href: "/espace/memoire",
+    emoji: "🧠",
+    title: "Mémoire du club",
+    description: "Cherchez dans tout ce que la communauté a déjà partagé",
+  },
+  {
+    href: "/espace/cercles",
+    emoji: "🔒",
+    title: "Cercles confidentiels",
+    description: "Entre dirigeants vérifiés BCE — parlez vrais chiffres",
+  },
 ];
 
-export default function ClubPage() {
+type KarmaRow = {
+  profile_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  points: number;
+};
+
+export default async function ClubPage() {
+  const supabase = await createClient();
+  const { data: leaderboard } = await supabase.rpc("karma_leaderboard", {
+    limit_count: 5,
+  });
+  const top = ((leaderboard as KarmaRow[]) ?? []).filter((r) => r.points > 0);
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <h1 className="text-xl font-bold">Le Club</h1>
       <div className="grid gap-3 sm:grid-cols-2">
         {sections.map((s) => (
@@ -57,6 +83,38 @@ export default function ClubPage() {
           </Link>
         ))}
       </div>
+
+      {top.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-400">
+            🏆 Top contributeurs
+          </h2>
+          <div className="space-y-2">
+            {top.map((r, i) => (
+              <Link
+                key={r.profile_id}
+                href={`/espace/membres/${r.profile_id}`}
+                className="flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/60 p-3 transition hover:border-amber-400/50"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="w-5 text-center font-bold text-amber-400">
+                    {i + 1}
+                  </span>
+                  <Avatar url={r.avatar_url} name={r.full_name} size="sm" />
+                  <span className="text-sm font-medium">{r.full_name}</span>
+                </span>
+                <span className="text-sm font-semibold text-amber-400">
+                  {r.points} pts
+                </span>
+              </Link>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-zinc-500">
+            Les points se gagnent en aidant : réponses, meilleures réponses,
+            propositions retenues, ressources et formations partagées.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

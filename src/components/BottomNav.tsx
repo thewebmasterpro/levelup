@@ -31,6 +31,8 @@ const items: {
       "/espace/annonces",
       "/espace/formations",
       "/espace/matchs",
+      "/espace/memoire",
+      "/espace/cercles",
     ],
     icon: (
       <>

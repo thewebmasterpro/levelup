@@ -16,6 +16,15 @@ export const metadata: Metadata = {
   title: "LevelUpNow (bêta) — Le réseau des entrepreneurs",
   description:
     "Échangez, développez votre réseau et montez en compétences avec une communauté d'entrepreneurs qualifiée.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "LevelUpNow",
+  },
+};
+
+export const viewport = {
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({

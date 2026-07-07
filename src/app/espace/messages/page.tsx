@@ -8,6 +8,7 @@ import { formatDate } from "@/components/PostFeed";
 type ConvRow = {
   id: string;
   title: string | null;
+  is_confidential: boolean;
   others: string[];
   lastMessage: { content: string; created_at: string } | null;
 };
@@ -26,7 +27,7 @@ export default function MessagesPage() {
 
       const { data: mine } = await supabase
         .from("conversation_participants")
-        .select("conversation_id, conversation:conversations(id, title)")
+        .select("conversation_id, conversation:conversations(id, title, is_confidential)")
         .eq("profile_id", user.id);
 
       const ids = (mine ?? []).map((m) => m.conversation_id);
@@ -54,6 +55,7 @@ export default function MessagesPage() {
         const conv = m.conversation as unknown as {
           id: string;
           title: string | null;
+          is_confidential: boolean;
         };
         const others = (parts ?? [])
           .filter((p) => p.conversation_id === m.conversation_id)
@@ -64,7 +66,13 @@ export default function MessagesPage() {
         const lastMessage =
           (msgs ?? []).find((x) => x.conversation_id === m.conversation_id) ??
           null;
-        return { id: conv.id, title: conv.title, others, lastMessage };
+        return {
+          id: conv.id,
+          title: conv.title,
+          is_confidential: conv.is_confidential ?? false,
+          others,
+          lastMessage,
+        };
       });
 
       rows.sort(
@@ -102,6 +110,7 @@ export default function MessagesPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="truncate font-semibold">
+                  {c.is_confidential && "🔒 "}
                   {c.title ?? c.others.join(", ") ?? "Conversation"}
                 </p>
                 {c.lastMessage && (
